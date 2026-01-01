@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>易經八卦姓名學分析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&display=swap');
+        body {
+            font-family: 'Noto Serif TC', serif;
+            background-color: #f5f5f0;
+            background-image: radial-gradient(#d4d4ce 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .gua-symbol {
+            font-size: 2.5rem;
+            line-height: 1;
+        }
+        .ink-card {
+            background-color: #fff;
+            border: 1px solid #d1d5db;
+            box-shadow: 4px 4px 0px 0px #b45309;
+            transition: all 0.2s ease;
+        }
+        .ink-btn {
+            background-color: #1f2937;
+            color: #f3f4f6;
+            transition: all 0.2s;
+        }
+        .ink-btn:hover {
+            background-color: #b45309;
+            transform: translateY(-1px);
+        }
+        .bagua-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        @media (min-width: 768px) {
+            .bagua-grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+        }
+    </style>
+</head>
+<body class="text-gray-800 min-h-screen flex flex-col items-center py-10 px-4">
+
+    <!-- Header -->
+    <header class="mb-10 text-center">
+        <div class="inline-block border-4 border-gray-800 p-4 bg-white">
+            <h1 class="text-4xl font-bold tracking-widest text-gray-900">易經姓名學</h1>
+            <p class="text-sm mt-2 text-gray-600 tracking-wider">五格剖象 · 八卦靈動 · 吉凶分析</p>
+        </div>
+    </header>
+
+    <!-- Input Section -->
+    <main class="w-full max-w-4xl space-y-8">
+        
+        <div class="ink-card p-6 md:p-8 rounded-sm">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-lg font-bold mb-2 text-gray-700">姓氏 (Surname)</label>
+                    <input type="text" id="surnameInput" placeholder="例如：林" class="w-full bg-gray-50 border-b-2 border-gray-300 p-3 text-xl focus:outline-none focus:border-amber-600 transition-colors" value="">
+                </div>
+                <div>
+                    <label class="block text-lg font-bold mb-2 text-gray-700">名字 (Name)</label>
+                    <input type="text" id="nameInput" placeholder="例如：志豪" class="w-full bg-gray-50 border-b-2 border-gray-300 p-3 text-xl focus:outline-none focus:border-amber-600 transition-colors" value="">
+                </div>
+            </div>
+
+            <!-- Manual Stroke Adjustment (Hidden by default, shown after initial check) -->
+            <div id="strokeAdjustSection" class="hidden mt-6 bg-amber-50 p-4 border border-amber-200 rounded">
+                <p class="text-sm text-amber-800 mb-3 font-bold">⚠️ 請確認康熙筆畫是否正確 (可手動修改)：</p>
+                <div id="strokeInputs" class="flex flex-wrap gap-4">
+                    <!-- Dynamic Inputs will be placed here -->
+                </div>
+            </div>
+
+            <button onclick="preAnalyze()" class="ink-btn w-full mt-8 py-3 text-lg font-bold tracking-widest rounded-sm">
+                開始排盤
+            </button>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultSection" class="hidden space-y-8 animate-fade-in">
+            
+            <!-- Five Grids Display -->
+            <div class="ink-card p-6">
+                <h2 class="text-2xl font-bold mb-6 text-center border-b pb-2 border-gray-200">五格八卦詳解</h2>
+                <div class="bagua-grid text-center">
+                    
+                    <!-- 天格 -->
+                    <div class="p-4 bg-gray-50 rounded border border-gray-200 flex flex-col items-center">
+                        <span class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">祖運 / 父母宮</span>
+                        <h3 class="text-xl font-bold text-amber-700 mb-1">天格</h3>
+                        <div id="tianGeNum" class="text-3xl font-black my-2"></div>
+                        <div id="tianGeGua" class="text-4xl text-gray-800 my-1"></div>
+                        <div id="tianGeAttr" class="text-sm px-2 py-1 bg-white border rounded mt-2"></div>
+                    </div>
+
+                    <!-- 人格 -->
+                    <div class="p-4 bg-amber-50 rounded border-2 border-amber-200 flex flex-col items-center transform md:-translate-y-2 relative shadow-lg">
+                        <div class="absolute -top-3 bg-amber-600 text-white text-xs px-2 py-1 rounded">核心</div>
+                        <span class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">主運 / 命宮</span>
+                        <h3 class="text-xl font-bold text-amber-700 mb-1">人格</h3>
+                        <div id="renGeNum" class="text-3xl font-black my-2"></div>
+                        <div id="renGeGua" class="text-4xl text-gray-800 my-1"></div>
+                        <div id="renGeAttr" class="text-sm px-2 py-1 bg-white border rounded mt-2"></div>
+                    </div>
+
+                    <!-- 地格 -->
+                    <div class="p-4 bg-gray-50 rounded border border-gray-200 flex flex-col items-center">
+                        <span class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">前運 / 子女宮</span>
+                        <h3 class="text-xl font-bold text-amber-700 mb-1">地格</h3>
+                        <div id="diGeNum" class="text-3xl font-black my-2"></div>
+                        <div id="diGeGua" class="text-4xl text-gray-800 my-1"></div>
+                        <div id="diGeAttr" class="text-sm px-2 py-1 bg-white border rounded mt-2"></div>
+                    </div>
+
+                    <!-- 外格 -->
+                    <div class="p-4 bg-gray-50 rounded border border-gray-200 flex flex-col items-center">
+                        <span class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">副運 / 社交宮</span>
+                        <h3 class="text-xl font-bold text-amber-700 mb-1">外格</h3>
+                        <div id="waiGeNum" class="text-3xl font-black my-2"></div>
+                        <div id="waiGeGua" class="text-4xl text-gray-800 my-1"></div>
+                        <div id="waiGeAttr" class="text-sm px-2 py-1 bg-white border rounded mt-2"></div>
+                    </div>
+
+                    <!-- 總格 -->
+                    <div class="p-4 bg-gray-50 rounded border border-gray-200 flex flex-col items-center">
+                        <span class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">後運 / 晚年宮</span>
+                        <h3 class="text-xl font-bold text-amber-700 mb-1">總格</h3>
+                        <div id="zongGeNum" class="text-3xl font-black my-2"></div>
+                        <div id="zongGeGua" class="text-4xl text-gray-800 my-1"></div>
+                        <div id="zongGeAttr" class="text-sm px-2 py-1 bg-white border rounded mt-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analysis Text -->
+            <div class="ink-card p-6 md:p-8">
+                <h3 class="text-xl font-bold mb-4 border-l-4 border-amber-600 pl-3">結構分析</h3>
+                <div id="analysisContent" class="space-y-4 text-gray-700 leading-relaxed">
+                    <!-- Text inserted via JS -->
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="mt-16 text-gray-500 text-sm text-center">
+        <p>註：姓名學流派眾多，本工具採「康熙筆畫」搭配「五格剖象法」計算，僅供娛樂參考。</p>
+    </footer>
+
+    <script>
+        // --- 1. Data Definitions ---
+
+        // 八卦對應表 (數值 % 8)
+        // 0或8:坤, 1:乾, 2:兌, 3:離, 4:震, 5:巽, 6:坎, 7:艮
+        const BAGUA_MAP = {
+            1: { gua: "乾", symbol: "☰", nature: "天", attr: "金", desc: "剛健中正，自強不息" },
+            2: { gua: "兌", symbol: "☱", nature: "澤", attr: "金", desc: "喜悅圓滿，利於口舌" },
+            3: { gua: "離", symbol: "☲", nature: "火", attr: "火", desc: "光明亮麗，依附熱情" },
+            4: { gua: "震", symbol: "☳", nature: "雷", attr: "木", desc: "奮發震動，積極向上" },
+            5: { gua: "巽", symbol: "☴", nature: "風", attr: "木", desc: "柔順而入，無孔不入" },
+            6: { gua: "坎", symbol: "☵", nature: "水", attr: "水", desc: "深沉智慧，艱險流動" },
+            7: { gua: "艮", symbol: "☶", nature: "山", attr: "土", desc: "穩重靜止，篤實保守" },
+            0: { gua: "坤", symbol: "☷", nature: "地", attr: "土", desc: "厚德載物，柔順包容" },
+            8: { gua: "坤", symbol: "☷", nature: "地", attr: "土", desc: "厚德載物，柔順包容" }
+        };
+
+        // 簡易康熙字典庫 (常用字，實際專案應更完整)
+        // 這裡列出部分常見字作為範例，未命中則允許使用者手動輸入
+        const KANGXI_DB = {
+            // 1劃
+            "一":1, "乙":1,
+            // 2劃
+            "二":2, "力":2, "十":2, "丁":2, "人":2, "入":2, "刀":2, "又":2,
+            // 3劃
+            "三":3, "大":3, "小":3, "口":3, "山":3, "土":3, "士":3, "工":3, "才":3, "下":3, "上":3, "千":3, "女":3, "子":3,
+            // 4劃
+            "四":4, "王":4, "日":4, "月":4, "木":4, "水":4, "火":4, "中":4, "天":4, "文":4, "方":4, "仁":4, "化":4, "少":4, "尤":4,
+            // 5劃
+            "五":5, "正":5, "主":5, "北":5, "玉":5, "生":5, "立":5, "田":5, "白":5, "石":5, "禾":5, "永":5, "司":5, "平":5, "弘":5,
+            // 6劃
+            "六":6, "行":6, "合":6, "吉":6, "同":6, "名":6, "向":6, "老":6, "安":6, "字":6, "守":6, "再":6, "冰":6, "全":6, "如":6, "宇":6,
+            // 7劃
+            "七":7, "李":7, "志":7, "良":7, "佑":7, "伯":7, "江":7, "見":7, "谷":7, "豆":7, "里":7, "足":7, "希":7, "序":7, "廷":7, "秀":7, "言":7,
+            // 8劃
+            "八":8, "林":8, "明":8, "長":8, "金":8, "青":8, "季":8, "佳":8, "京":8, "承":8, "東":8, "松":8, "武":8, "版":8, "固":8, "坤":8, "孟":8, "岳":8, "忠":8, "昊":8, "昇":8, "易":8, "昌":8, "欣":8, "雨":8,
+            // 9劃
+            "九":9, "信":9, "俊":9, "南":9, "宣":9, "思":9, "星":9, "春":9, "秋":9, "美":9, "勇":9, "帝":9, "帥":9, "建":9, "映":9, "柏":9, "冠":9, "姿":9, "貞":9, "音":9,
+            // 10劃
+            "十":10, "倍":10, "修":10, "倫":10, "哲":10, "家":10, "庭":10, "恩":10, "展":10, "峻":10, "峯":10, "徐":10, "時":10, "書":10, "軒":10, "高":10, "益":10, "真":10, "祐":10, "素":10, "純":10, "偉":10,
+            // 11劃
+            "陳":16, "黃":12, "張":11, "許":11, "梁":11, "郭":15, // 常見姓氏特殊筆畫
+            "國":11, "基":11, "培":11, "常":11, "康":11, "強":11, "啟":11, "晨":11, "章":11, "紹":11, "崇":11, "唯":11, "彩":11, "敏":11, "雪":11,
+            // 12劃
+            "凱":12, "博":12, "傑":12, "勝":12, "善":12, "富":12, "景":12, "智":12, "程":12, "翔":12, "量":12, "順":12, "雲":12, "晴":12, "惠":12, "慈":12, "涵":12, "淑":12, "婷":12, "鈞":12,
+            // 13劃
+            "勤":13, "圓":13, "微":13, "愛":13, "敬":13, "新":13, "業":13, "義":13, "群":13, "聖":13, "詩":13, "鈺":13, "楊":13,
+            // 14劃
+            "豪":14, "誠":14, "實":14, "榮":14, "睿":14, "福":14, "種":14, "精":14, "維":14, "華":14, "鳳":14, "鳴":14, "齊":14, "銘":14, "瑜":14, "瑞":14, "嘉":14,
+            // 15劃
+            "德":15, "樂":15, "標":15, "模":15, "毅":15, "慧":15, "興":15, "賢":15, "養":15, "震":15, "儀":15, "寬":15, "萱":15,
+            // 16劃
+            "學":16, "導":16, "憲":16, "橋":16, "機":16, "歷":16, "澤":16, "澳":16, "龍":16, "翰":16, "錦":16, "穎":16, "靜":16, "陳":16, "賴":16,
+            // 17劃
+            "優":17, "勵":17, "應":17, "駿":17, "鴻":17, "遠":17, "陽":17, "隆":17,
+            // 18劃
+            "豐":18, "璧":18, "環":18, "翼":18, "禮":18, "濟":18, "濤":18, "顏":18, "魏":18,
+            // 19劃
+            "羅":19, "鵬":19, "麒":19, "麗":19, "韻":19, "鄭":19,
+            // 20劃
+            "寶":20, "懷":20, "懸":20, "耀":20, "獻":20,
+            // 21劃
+            "顧":21, "藝":21, "譽":21, "鶴":21
+        };
+
+        // 特殊字筆畫覆蓋 (康熙筆畫規則與現代不同)
+        const SPECIAL_STROKES = {
+            "陳": 16, "黃": 12, "張": 11, "許": 11, "郭": 15, "劉": 15, "楊": 13, "趙": 14, "吳": 7, "徐": 10,
+            "孫": 10, "馬": 10, "朱": 6, "胡": 11, "林": 8, "高": 10, "何": 7, "鄭": 19, "羅": 19, "宋": 7,
+            "謝": 17, "韓": 17, "唐": 10, "馮": 12, "于": 3, "董": 15, "蕭": 18, "程": 12, "曹": 11, "袁": 10,
+            "鄧": 19, "傅": 12, "曾": 12, "彭": 12, "蘇": 22, "蔡": 17, "蔣": 17, "魏": 18, "薛": 19, "葉": 15
+        };
+
+        // 合併字典
+        Object.assign(KANGXI_DB, SPECIAL_STROKES);
+
+        // --- 2. Logic Functions ---
+
+        function getStroke(char) {
+            if (KANGXI_DB[char]) return KANGXI_DB[char];
+            // 簡單估算: 這裡只是 fallback，實際應用應該讓使用者手填
+            return 10; 
+        }
+
+        function getWuXing(number) {
+            const digit = number % 10;
+            if ([1, 2].includes(digit)) return { text: "木", color: "text-green-600", bg: "bg-green-100" };
+            if ([3, 4].includes(digit)) return { text: "火", color: "text-red-600", bg: "bg-red-100" };
+            if ([5, 6].includes(digit)) return { text: "土", color: "text-yellow-600", bg: "bg-yellow-100" };
+            if ([7, 8].includes(digit)) return { text: "金", color: "text-gray-500", bg: "bg-gray-200" };
+            return { text: "水", color: "text-blue-600", bg: "bg-blue-100" }; // 9, 0
+        }
+
+        function getBagua(number) {
+            const remainder = number % 8;
+            const key = remainder === 0 ? 8 : remainder;
+            return BAGUA_MAP[key];
+        }
+
+        // --- 3. UI Interaction ---
+
+        let currentChars = [];
+        let isConfirmed = false;
+
+        function preAnalyze() {
+            const surname = document.getElementById('surnameInput').value.trim();
+            const name = document.getElementById('nameInput').value.trim();
+
+            if (!surname || !name) {
+                alert("請輸入姓氏和名字");
+                return;
+            }
+
+            const chars = [...surname, ...name];
+            const strokeInputsDiv = document.getElementById('strokeInputs');
+            strokeInputsDiv.innerHTML = '';
+            
+            currentChars = chars.map((char, index) => {
+                const type = index < surname.length ? '姓' : '名';
+                const defaultStroke = getStroke(char);
+                return { char, type, stroke: defaultStroke, id: `char-${index}` };
+            });
+
+            // Generate inputs for checking strokes
+            currentChars.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "flex flex-col items-center bg-white p-2 rounded shadow-sm";
+                div.innerHTML = `
+                    <span class="text-2xl font-serif mb-1">${item.char}</span>
+                    <input type="number" id="${item.id}" value="${item.stroke}" 
+                        class="w-16 text-center border rounded p-1 text-sm font-mono focus:border-amber-500 focus:outline-none">
+                    <span class="text-xs text-gray-400 mt-1">${item.type}</span>
+                `;
+                strokeInputsDiv.appendChild(div);
+            });
+
+            // Show verify section and change button logic
+            document.getElementById('strokeAdjustSection').classList.remove('hidden');
+            const btn = document.querySelector('button');
+            btn.innerText = "確認筆畫並分析";
+            btn.onclick = runAnalysis;
+        }
+
+        function runAnalysis() {
+            // 1. Get corrected strokes
+            const surnameStr = document.getElementById('surnameInput').value.trim();
+            const nameStr = document.getElementById('nameInput').value.trim();
+            
+            const sLen = surnameStr.length;
+            const nLen = nameStr.length;
+
+            const sStrokes = [];
+            const nStrokes = [];
+
+            currentChars.forEach((item, index) => {
+                const val = parseInt(document.getElementById(item.id).value) || 0;
+                if (index < sLen) {
+                    sStrokes.push(val);
+                } else {
+                    nStrokes.push(val);
+                }
+            });
+
+            // 2. Logic (Python port)
+            
+            // 天格: 單姓+1, 複姓合計
+            let tianGe = sLen === 1 ? sStrokes[0] + 1 : sStrokes.reduce((a, b) => a + b, 0);
+
+            // 人格: 姓氏最後字 + 名字第一字
+            let renGe = sStrokes[sLen - 1] + nStrokes[0];
+
+            // 地格: 名字總和 (單名+1)
+            let diGe = nLen === 1 ? nStrokes[0] + 1 : nStrokes.reduce((a, b) => a + b, 0);
+
+            // 總格: 全部相加
+            const totalS = sStrokes.reduce((a, b) => a + b, 0);
+            const totalN = nStrokes.reduce((a, b) => a + b, 0);
+            let zongGe = totalS + totalN;
+
+            // 外格: 總格 - 人格 + 1 (單姓單名特例=2)
+            let waiGe = zongGe - renGe + 1;
+            if (sLen === 1 && nLen === 1) {
+                waiGe = 2;
+            }
+
+            // 3. Render Results
+            renderGrid("tianGe", tianGe);
+            renderGrid("renGe", renGe);
+            renderGrid("diGe", diGe);
+            renderGrid("waiGe", waiGe);
+            renderGrid("zongGe", zongGe);
+
+            // Text Analysis
+            const renWuXing = getWuXing(renGe);
+            const tianWuXing = getWuXing(tianGe);
+            const diWuXing = getWuXing(diGe);
+
+            let analysisHTML = `
+                <p><strong><span class="text-amber-700">人格 (主運)</span>：</strong>數值為 ${renGe}，五行屬 <span class="${renWuXing.color} font-bold">${renWuXing.text}</span>。代表了人的中心命運、性格與體質。</p>
+                <p><strong>五行關係：</strong></p>
+                <ul class="list-disc pl-5 space-y-2">
+                    <li>
+                        對上（天格）：${getRelation(renWuXing.text, tianWuXing.text, "父母/長輩")}
+                    </li>
+                    <li>
+                        對下（地格）：${getRelation(renWuXing.text, diWuXing.text, "子女/部屬")}
+                    </li>
+                </ul>
+                <div class="mt-4 p-4 bg-stone-100 rounded text-sm text-stone-600">
+                    <p class="mb-1"><strong>八卦靈動：</strong></p>
+                    <p>人格卦象為【${getBagua(renGe).gua}${getBagua(renGe).symbol}】，${getBagua(renGe).desc}。</p>
+                    <p>總格卦象為【${getBagua(zongGe).gua}${getBagua(zongGe).symbol}】，${getBagua(zongGe).desc}。</p>
+                </div>
+            `;
+
+            document.getElementById('analysisContent').innerHTML = analysisHTML;
+            document.getElementById('resultSection').classList.remove('hidden');
+            
+            // Scroll to results
+            document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function renderGrid(idPrefix, num) {
+            const bagua = getBagua(num);
+            const wx = getWuXing(num);
+
+            document.getElementById(idPrefix + 'Num').innerText = num;
+            document.getElementById(idPrefix + 'Gua').innerText = bagua.symbol; // + " " + bagua.gua;
+            
+            const attrEl = document.getElementById(idPrefix + 'Attr');
+            attrEl.innerHTML = `<span class="${wx.color} font-bold">${wx.text}</span> · ${bagua.nature}${bagua.attr}`;
+        }
+
+        function getRelation(me, other, targetName) {
+            // 五行生剋簡易判斷
+            const map = { "木": 1, "火": 2, "土": 3, "金": 4, "水": 5 };
+            const mVal = map[me];
+            const oVal = map[other];
+            
+            let rel = "";
+            let color = "";
+
+            if (mVal === oVal) {
+                rel = "比和 (相助)";
+                color = "text-green-600";
+            } else if ((mVal % 5) + 1 === oVal) {
+                rel = "我生之 (付出)";
+                color = "text-gray-600";
+            } else if ((oVal % 5) + 1 === mVal) {
+                rel = "生我 (得助)";
+                color = "text-blue-600";
+            } else if ((mVal + 1) % 5 + 1 === oVal) { // 隔一位相剋: 1->3 (木剋土)
+                rel = "我剋之 (支配)";
+                color = "text-amber-600";
+            } else {
+                rel = "剋我 (壓力)";
+                color = "text-red-600";
+            }
+
+            return `人格(${me}) 與 ${targetName}(${other}) 的關係為：<span class="${color} font-bold">${rel}</span>`;
+        }
+
+    </script>
+</body>
+</html>
